@@ -9,9 +9,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# ---------------------------------
-# 1. SET TRUE WORLD STATE
-# ---------------------------------
+# TRUE WORLD STATE
 is_rainy = np.random.rand() < 0.30
 is_heavy_traffic = np.random.rand() < 0.40
 
@@ -25,9 +23,6 @@ else:
     true_success_prob = 0.80
 
 
-# ---------------------------------
-# 2. CHAT COMPLETION HELPER
-# ---------------------------------
 def chat_completion(system_text, user_text):
     client = OpenAI(
         base_url="https://models.inference.ai.azure.com",
@@ -43,10 +38,7 @@ def chat_completion(system_text, user_text):
     return response.choices[0].message.content
 
 
-# ---------------------------------
-# 3. SUBAGENT ESTIMATES
-# ---------------------------------
-
+# each subagent is prompted for an estimation
 def weatherbot_estimate():
     """
     WeatherBot only knows whether 'it might be rainy' or 'it might be clear.'
@@ -73,7 +65,6 @@ def weatherbot_estimate():
    
     # Extract the text and parse as float
     text = chat_completion(system_text, user_text)
-    # naive parse (assuming the LLM returns plain float in text):
     try:
         return float(text.strip())
     except ValueError:
@@ -101,7 +92,6 @@ def trafficbot_estimate():
     """
 
     text = chat_completion(system_text, user_text)
-    # naive parse (assuming the LLM returns plain float in text):
     try:
         return float(text.strip())
     except ValueError:
@@ -132,7 +122,6 @@ def timingbot_estimate():
     """
 
     text = chat_completion(system_text, user_text)
-    # naive parse (assuming the LLM returns plain float in text):
     try:
         return float(text.strip())
     except ValueError:
@@ -142,7 +131,6 @@ def maintenancebot_estimate():
     """
     MaintenanceBot only sees a random 'condition' of Route A: 'smooth' or 'potholes.'
     """
-    # We'll do a small random chance of 'potholes' vs 'smooth'
     route_condition = np.random.choice(["potholes", "smooth"])
     system_text = """You are part of a coordinated team of specialized AI assistants (subagents) working together on a common task: determining whether 
     Route A is a viable option for delivering a package on time. Your role is to contribute a reliable numeric estimate 
@@ -161,7 +149,6 @@ def maintenancebot_estimate():
     """
 
     text = chat_completion(system_text, user_text)
-    # naive parse (assuming the LLM returns plain float in text):
     try:
         return float(text.strip())
     except ValueError:
@@ -175,9 +162,7 @@ subagent_estimates = {
 }
 
 
-# ---------------------------------
-# 4. DECIDE_TRADE FUNCTION (EDITED)
-# ---------------------------------
+# now prompt the subagents to state how many shares they are trading based on their estimates
 def decide_trade(subagent_name, p_est, market_price, capital):
     """
     The subagent will produce a signed number: positive => buy that many shares,
@@ -205,19 +190,16 @@ def decide_trade(subagent_name, p_est, market_price, capital):
 
     response_text = chat_completion(system_prompt, user_text)
 
-    # Parse the final numeric decision from the text
     pattern = r"(-?\d+(\.\d+)?)"
     matches = re.findall(pattern, response_text)
     trade_size = 0.0
     if matches:
-        # matches is a list of tuples, each with the numeric string as first item
-        trade_str = matches[-1][0]  # last numeric match
+        trade_str = matches[-1][0]
         try:
             trade_size = float(trade_str)
         except:
             trade_size = 0.0
 
-    # Debug print
     print(f"\n--- LLM {subagent_name} decision ---")
     print(f"Prompt:\n{user_text}")
     print(f"Response:\n{response_text}")
@@ -226,18 +208,17 @@ def decide_trade(subagent_name, p_est, market_price, capital):
     return trade_size
 
 
-# ---------------------------------
-# 5. MARKET SIMULATION
-# ---------------------------------
+# NOW WE ACTUALLY SIMULATE THE MARKET
 
-# Each subagent has initial capital
 subagent_capital = {name: 100.0 for name in subagent_estimates}
 
-# We'll track a single net position (positive => long, negative => short)
+# initally, set all positions to 0;
+# depending on actions (i.e. trade, sell, or nothing)
+# move by +1 or -1 or 0 respectively
 subagent_positions = {name: 0.0 for name in subagent_estimates}
 
 market_price = 0.50
-num_rounds = 3
+num_rounds = 50
 liquidity = 0.1  # used for simple price movement
 
 for r in range(num_rounds):
@@ -246,28 +227,26 @@ for r in range(num_rounds):
         capital = subagent_capital[name]
         trade_size = decide_trade(name, p_est, market_price, capital)
 
-        if abs(trade_size) < 1e-9:
-            # No trade
+        if abs(trade_size) < 1e-9: # too small
             continue
 
-        # BUY scenario: trade_size > 0
-        # cost = shares * market_price
+        # handle buying shares
         if trade_size > 0:
             cost = trade_size * market_price
             # check if subagent can afford
             if cost > capital:
-                # clamp trade_size
+                # clip trade_size
                 max_shares = int(capital // market_price)
                 trade_size = float(max_shares)
                 cost = trade_size * market_price
             subagent_capital[name] -= cost
             subagent_positions[name] += trade_size
 
-            # Move market price (toy update)
+            # adjust market price
             diff = abs(p_est - market_price)
             market_price += diff * liquidity * (trade_size / 100.0)
 
-        # SHORT scenario: trade_size < 0
+        # handle shorting shares
         else:
             # e.g. trade_size = -10 => short 10 shares
             shares_to_short = abs(trade_size)
@@ -291,30 +270,22 @@ for r in range(num_rounds):
                 shares_to_short = 0
                 trade_size = 0
 
-            # final update if short is successful
             if shares_to_short > 0:
                 subagent_positions[name] -= shares_to_short
 
-                # toy market price update
+                # adjust market price
                 diff = abs(p_est - market_price)
                 market_price -= diff * liquidity * (shares_to_short / 100.0)
 
-    # clamp market_price to [0,1]
+    # clip market_price to [0,1]
     market_price = max(0.0, min(1.0, market_price))
 
     print(f"End of round {r+1}, market_price={market_price:.3f}")
 
-
-# ---------------------------------
-# 6. RESOLVE EVENT
-# ---------------------------------
-
+# resolved event based on true probability
 did_succeed = (np.random.rand() < true_success_prob)
 
-# ---------------------------------
-# 7. SETTLEMENT (PAYOUTS)
-# ---------------------------------
-
+# payouts are calculated
 subagent_payouts = {}
 for name in subagent_estimates:
     position = subagent_positions[name]
