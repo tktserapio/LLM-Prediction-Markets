@@ -250,10 +250,6 @@ for r in range(num_rounds):
         else:
             # e.g. trade_size = -10 => short 10 shares
             shares_to_short = abs(trade_size)
-            # In real markets, you'd credit the subagent some money for shorting at price,
-            # but also require margin. We'll do a simple approach:
-            # The subagent *receives* shares_to_short * market_price now,
-            # but must ensure enough capital to pay if the event occurs (which costs them shares_to_short * 1).
             if subagent_capital[name] < shares_to_short:
                 # can't short that many shares if you can't cover max possible loss
                 shares_to_short = int(subagent_capital[name])
@@ -261,9 +257,6 @@ for r in range(num_rounds):
 
             credit = shares_to_short * market_price
             subagent_capital[name] += credit
-            # but effectively we "lock" an amount equal to shares_to_short in capital
-            # to ensure they can pay if the event does happen. We'll keep it simple:
-            # If they don't have enough capital left to remain safe, clamp further
             if subagent_capital[name] < 0:
                 # revert if it somehow goes negative
                 subagent_capital[name] -= credit
