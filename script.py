@@ -6,6 +6,10 @@ import random
 import json
 import re
 from dotenv import load_dotenv
+from azure.ai.inference import ChatCompletionsClient
+from azure.ai.inference.models import SystemMessage
+from azure.ai.inference.models import UserMessage
+from azure.core.credentials import AzureKeyCredential
 
 load_dotenv()
 
@@ -24,17 +28,34 @@ else:
 
 
 def chat_completion(system_text, user_text):
-    client = OpenAI(
-        base_url="https://models.inference.ai.azure.com",
-        api_key=os.getenv("GITHUB_TOKEN")
-    )
+    # client = OpenAI(
+    #     base_url="https://models.inference.ai.azure.com",
+    #     api_key=os.getenv("GITHUB_TOKEN")
+    # )
     
-    response = openai.chat.completions.create(model="gpt-4o",
-    temperature=0.0,
-    messages=[
-        {"role": "system", "content": system_text},
-        {"role": "user", "content": user_text},
-    ])
+    # response = openai.chat.completions.create(model="gpt-4o",
+    # temperature=1.5,
+    # messages=[
+    #     {"role": "system", "content": system_text},
+    #     {"role": "user", "content": user_text},
+    # ])
+    # return response.choices[0].message.content
+    client = ChatCompletionsClient(
+        endpoint="https://models.inference.ai.azure.com",
+        credential=AzureKeyCredential(os.environ["GITHUB_TOKEN"]),
+    )
+
+    response = client.complete(
+        messages=[
+            SystemMessage(system_text),
+            UserMessage(user_text),
+        ],
+        model="gpt-4o",
+        temperature=0.0,
+        max_tokens=4096,
+        top_p=0.1
+    )
+
     return response.choices[0].message.content
 
 
@@ -169,23 +190,21 @@ def decide_trade(subagent_name, p_est, market_price, capital):
     negative => short that many shares.
     """
     system_prompt = (
-        "You are part of a coordinated team of specialized AI assistants (subagents) working together on a common task: "
-        "determining whether Route A is a viable option for delivering a package on time. "
-        "You are participating in a prediction market for the likelihood of this outcome. "
-        "You have a personal probability estimate for the event. "
-        "You can buy shares if you think the event is underpriced, or short shares if you think it's overpriced. "
-        "Payout for a share is 1 if the event happens, 0 otherwise. "
-        "Make your decision based on your estimate, the market price, and your available capital."
+        "You are a simulated agent participating in a research experiment to evaluate the feasibility of using prediction markets "
+        "for decision-making. Your task is to assess the likelihood that Route A will successfully deliver a package on time. "
+        "You have access to a personal probability estimate and can participate in a toy prediction market by choosing to buy or short shares. "
+        "Each share pays out 1 if the event occurs, 0 otherwise. "
+        "Make your trade decision based on your estimate, the current market price, and your available capital."
     )
 
     user_text = (
-        f"You are {subagent_name}.\n"
-        f"Your private estimate of Route A's success is {p_est:.3f}.\n"
-        f"The current market price is {market_price:.3f}.\n"
-        f"You have {capital:.2f} units of capital.\n"
-        "Question: How many shares would you buy (positive number) or short (negative number)? "
-        "Return your final numeric decision in plain text. If 0, do nothing.\n"
-        "No extra text. Just your final reasoning (brief) then the numeric trade size."
+        f"Agent: {subagent_name}\n"
+        f"Your probability estimate for Route A's success: {p_est:.3f}\n"
+        f"Current market price: {market_price:.3f}\n"
+        f"Available capital: {capital:.2f} units\n"
+        "Please decide how many shares to buy (positive) or short (negative) based on this information. "
+        "Respond with a brief rationale followed by a single number representing your trade size. "
+        "If you choose not to trade, respond with 0."
     )
 
     response_text = chat_completion(system_prompt, user_text)
@@ -218,7 +237,7 @@ subagent_capital = {name: 100.0 for name in subagent_estimates}
 subagent_positions = {name: 0.0 for name in subagent_estimates}
 
 market_price = 0.50
-num_rounds = 50
+num_rounds = 5
 liquidity = 0.1  # used for simple price movement
 
 for r in range(num_rounds):
