@@ -1,0 +1,392 @@
+[
+  {
+    "round": 1,
+    "market_price": 0.5982202543408819,
+    "true_success_probability": 0.8,
+    "capital_positions": {
+      "WeatherBot1": {
+        "cap": 95.0,
+        "pos": 10.0
+      },
+      "WeatherBot2": {
+        "cap": 49.5,
+        "pos": 100.0
+      },
+      "TrafficBot1": {
+        "cap": 55.64999999999999,
+        "pos": 80.0
+      },
+      "TrafficBot2": {
+        "cap": 89.9880625,
+        "pos": 17.0
+      },
+      "TimingBot": {
+        "cap": 94.04452421875,
+        "pos": 10.0
+      },
+      "MaintBot": {
+        "cap": 102.98426616699219,
+        "pos": -5.0
+      },
+      "LocalEventsBot1": {
+        "cap": 102.97811450344848,
+        "pos": -5.0
+      },
+      "RoadConditionBot1": {
+        "cap": 94.05599742439614,
+        "pos": 10.0
+      }
+    }
+  },
+  {
+    "round": 2,
+    "market_price": 0.6893132581940771,
+    "true_success_probability": 0.8,
+    "capital_positions": {
+      "WeatherBot1": {
+        "cap": 0.48119981414066615,
+        "pos": 168.0
+      },
+      "WeatherBot2": {
+        "cap": 46.21089122945721,
+        "pos": 105.0
+      },
+      "TrafficBot1": {
+        "cap": 49.0566463185462,
+        "pos": 90.0
+      },
+      "TrafficBot2": {
+        "cap": 23.753694895643804,
+        "pos": 117.0
+      },
+      "TimingBot": {
+        "cap": 90.58427063605941,
+        "pos": 15.0
+      },
+      "MaintBot": {
+        "cap": 109.90527016258972,
+        "pos": -15.0
+      },
+      "LocalEventsBot1": {
+        "cap": 106.42036022627477,
+        "pos": -10.0
+      },
+      "RoadConditionBot1": {
+        "cap": 87.18953405027891,
+        "pos": 20.0
+      }
+    }
+  },
+  {
+    "round": 3,
+    "market_price": 0.7023897753885635,
+    "true_success_probability": 0.8,
+    "capital_positions": {
+      "WeatherBot1": {
+        "cap": 0.15032945020750915,
+        "pos": 168.48
+      },
+      "WeatherBot2": {
+        "cap": 39.3164945270656,
+        "pos": 115.0
+      },
+      "TrafficBot1": {
+        "cap": 45.59628794674035,
+        "pos": 95.0
+      },
+      "TrafficBot2": {
+        "cap": 0.1790731981657352,
+        "pos": 151.0
+      },
+      "TimingBot": {
+        "cap": 91.28642358533398,
+        "pos": 14.0
+      },
+      "MaintBot": {
+        "cap": 112.01172093685364,
+        "pos": -18.0
+      },
+      "LocalEventsBot1": {
+        "cap": 108.5234118101352,
+        "pos": -13.0
+      },
+      "RoadConditionBot1": {
+        "cap": 80.19065024887573,
+        "pos": 30.0
+      }
+    }
+  },
+  {
+    "round": 4,
+    "market_price": 0.7059754189925318,
+    "true_success_probability": 0.8,
+    "capital_positions": {
+      "WeatherBot1": {
+        "cap": 0.04497098389922463,
+        "pos": 168.63
+      },
+      "WeatherBot2": {
+        "cap": 32.29222625400882,
+        "pos": 125.0
+      },
+      "TrafficBot1": {
+        "cap": 38.54732302709677,
+        "pos": 105.0
+      },
+      "TrafficBot2": {
+        "cap": 0.002239376712034502,
+        "pos": 151.25
+      },
+      "TimingBot": {
+        "cap": 94.8234010530239,
+        "pos": 9.0
+      },
+      "MaintBot": {
+        "cap": 115.5484672953705,
+        "pos": -23.0
+      },
+      "LocalEventsBot1": {
+        "cap": 112.05055350391133,
+        "pos": -18.0
+      },
+      "RoadConditionBot1": {
+        "cap": 73.15545613249566,
+        "pos": 40.0
+      }
+    }
+  },
+  {
+    "round": 5,
+    "market_price": 0.7289636833067006,
+    "true_success_probability": 0.8,
+    "capital_positions": {
+      "WeatherBot1": {
+        "cap": 0.005436360435642849,
+        "pos": 168.686
+      },
+      "WeatherBot2": {
+        "cap": 0.5227212219147113,
+        "pos": 170.0
+      },
+      "TrafficBot1": {
+        "cap": 0.5515106976732866,
+        "pos": 158.0
+      },
+      "TrafficBot2": {
+        "cap": 0.002239376712034502,
+        "pos": 151.25
+      },
+      "TimingBot": {
+        "cap": 98.46856282308043,
+        "pos": 4.0
+      },
+      "MaintBot": {
+        "cap": 117.00616909896797,
+        "pos": -25.0
+      },
+      "LocalEventsBot1": {
+        "cap": 114.23463982754404,
+        "pos": -21.0
+      },
+      "RoadConditionBot1": {
+        "cap": 65.8874694660987,
+        "pos": 50.0
+      }
+    }
+  },
+  {
+    "round": 6,
+    "market_price": 0.7271795067612802,
+    "true_success_probability": 0.8,
+    "capital_positions": {
+      "WeatherBot1": {
+        "cap": 0.005436360435642849,
+        "pos": 168.686
+      },
+      "WeatherBot2": {
+        "cap": 0.005157006766953853,
+        "pos": 170.71
+      },
+      "TrafficBot1": {
+        "cap": 0.004674089144962257,
+        "pos": 158.75
+      },
+      "TrafficBot2": {
+        "cap": 0.002239376712034502,
+        "pos": 151.25
+      },
+      "TimingBot": {
+        "cap": 102.11494123446596,
+        "pos": -1.0
+      },
+      "MaintBot": {
+        "cap": 120.65163264528235,
+        "pos": -30.0
+      },
+      "LocalEventsBot1": {
+        "cap": 117.86981922669395,
+        "pos": -26.0
+      },
+      "RoadConditionBot1": {
+        "cap": 58.63755041028826,
+        "pos": 60.0
+      }
+    }
+  },
+  {
+    "round": 7,
+    "market_price": 0.7417380690582133,
+    "true_success_probability": 0.8,
+    "capital_positions": {
+      "WeatherBot1": {
+        "cap": 0.005436360435642849,
+        "pos": 168.686
+      },
+      "WeatherBot2": {
+        "cap": 0.005157006766953853,
+        "pos": 170.71
+      },
+      "TrafficBot1": {
+        "cap": 0.004674089144962257,
+        "pos": 158.75
+      },
+      "TrafficBot2": {
+        "cap": 0.002239376712034502,
+        "pos": 151.25
+      },
+      "TimingBot": {
+        "cap": 105.75083876827236,
+        "pos": -6.0
+      },
+      "MaintBot": {
+        "cap": 122.1056519149704,
+        "pos": -32.0
+      },
+      "LocalEventsBot1": {
+        "cap": 121.50077978047851,
+        "pos": -31.0
+      },
+      "RoadConditionBot1": {
+        "cap": 0.705277605113757,
+        "pos": 140.0
+      }
+    }
+  },
+  {
+    "round": 8,
+    "market_price": 0.7351011864184542,
+    "true_success_probability": 0.8,
+    "capital_positions": {
+      "WeatherBot1": {
+        "cap": 0.005436360435642849,
+        "pos": 168.686
+      },
+      "WeatherBot2": {
+        "cap": 0.005157006766953853,
+        "pos": 170.71
+      },
+      "TrafficBot1": {
+        "cap": 0.004674089144962257,
+        "pos": 158.75
+      },
+      "TrafficBot2": {
+        "cap": 0.002239376712034502,
+        "pos": 151.25
+      },
+      "TimingBot": {
+        "cap": 109.45952911356342,
+        "pos": -11.0
+      },
+      "MaintBot": {
+        "cap": 129.5204239762364,
+        "pos": -42.0
+      },
+      "LocalEventsBot1": {
+        "cap": 125.1868234857286,
+        "pos": -36.0
+      },
+      "RoadConditionBot1": {
+        "cap": 0.705277605113757,
+        "pos": 140.0
+      }
+    }
+  },
+  {
+    "round": 9,
+    "market_price": 0.731540834755587,
+    "true_success_probability": 0.8,
+    "capital_positions": {
+      "WeatherBot1": {
+        "cap": 0.005436360435642849,
+        "pos": 168.686
+      },
+      "WeatherBot2": {
+        "cap": 0.005157006766953853,
+        "pos": 170.71
+      },
+      "TrafficBot1": {
+        "cap": 0.004674089144962257,
+        "pos": 158.75
+      },
+      "TrafficBot2": {
+        "cap": 0.002239376712034502,
+        "pos": 151.25
+      },
+      "TimingBot": {
+        "cap": 113.13503504565568,
+        "pos": -16.0
+      },
+      "MaintBot": {
+        "cap": 133.1948329962531,
+        "pos": -47.0
+      },
+      "LocalEventsBot1": {
+        "cap": 127.38518986391355,
+        "pos": -39.0
+      },
+      "RoadConditionBot1": {
+        "cap": 0.705277605113757,
+        "pos": 140.0
+      }
+    }
+  },
+  {
+    "round": 10,
+    "market_price": 0.7288632862751718,
+    "true_success_probability": 0.8,
+    "capital_positions": {
+      "WeatherBot1": {
+        "cap": 0.005436360435642849,
+        "pos": 168.686
+      },
+      "WeatherBot2": {
+        "cap": 0.005157006766953853,
+        "pos": 170.71
+      },
+      "TrafficBot1": {
+        "cap": 0.004674089144962257,
+        "pos": 158.75
+      },
+      "TrafficBot2": {
+        "cap": 0.002239376712034502,
+        "pos": 151.25
+      },
+      "TimingBot": {
+        "cap": 116.79273921943361,
+        "pos": -21.0
+      },
+      "MaintBot": {
+        "cap": 135.3888641098682,
+        "pos": -50.0
+      },
+      "LocalEventsBot1": {
+        "cap": 129.5754933608526,
+        "pos": -42.0
+      },
+      "RoadConditionBot1": {
+        "cap": 0.705277605113757,
+        "pos": 140.0
+      }
+    }
+  }
+]

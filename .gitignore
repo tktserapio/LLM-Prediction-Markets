@@ -1,2 +1,4 @@
 .env
 venv/
+old_code/
+images/
