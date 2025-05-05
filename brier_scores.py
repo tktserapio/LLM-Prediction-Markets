@@ -238,7 +238,7 @@ def decide_trade(subagent_name, p_est, market_price, capital):
     print(f"Response:\n{response_text}")
     print(f"Parsed trade size: {trade_size}\n")
 
-    return trade_size
+    return trade_size, response_text
 
 def simulate_one():
     # 1) TRUE WORLD STATE
@@ -271,11 +271,25 @@ def simulate_one():
     liquidity    = 1/8
     num_rounds   = 10
 
+    trade_history = []
+
     # 3) Trading
-    for _ in range(num_rounds):
+    for rnd in range(1, num_rounds+1):
         for name, p_est in subagent_estimates.items():
             capital    = subagent_capital[name]
-            trade_size = decide_trade(name, p_est, market_price, capital)
+            price_before = market_price
+            trade_size, full_response = decide_trade(name, p_est, market_price, capital)
+
+            entry = {
+                "true_success_prob": true_success_prob,
+                "round": rnd,
+                "agent": name,
+                "belief": p_est,
+                "full_response": full_response,
+                "capital_before": capital,
+                "price_before": price_before,
+                "trade_size": trade_size
+            }
 
             if trade_size > 0:
                 cost = trade_size * market_price
@@ -303,7 +317,13 @@ def simulate_one():
                     diff = abs(p_est - market_price)
                     market_price -= diff * liquidity * (shares_to_short / 100.0)
 
-        market_price = max(0.0, min(1.0, market_price))
+            market_price = max(0.0, min(1.0, market_price))
+
+            entry["price_after"]   = market_price
+            entry["capital_after"] = subagent_capital[name]
+            entry["position"]      = subagent_positions[name]
+
+            trade_history.append(entry)
 
     # 4) Outcome & Settlement
     did_succeed = (np.random.rand() < true_success_prob)
@@ -313,7 +333,7 @@ def simulate_one():
         elif pos < 0 and did_succeed:
             subagent_capital[name] -= abs(pos)
 
-    return market_price, did_succeed
+    return trade_history, market_price, did_succeed
 
 # -------------------------
 # 7) MULTI-RUN & BRIER SCORE
@@ -322,15 +342,23 @@ def simulate_one():
 N     = 20
 preds = []
 obs   = []
+all_runs = []
 
-for i in range(N):
-    p, success = simulate_one()
+for run in range(1, N+1):
+    history, p, success = simulate_one()
+    for entry in history:
+        entry["run"]      = run
+        entry["success"]  = success
+    all_runs.extend(history)
     preds.append(p)
     obs.append(1 if success else 0)
 
 preds = np.array(preds)
 obs   = np.array(obs)
 brier = np.mean((preds - obs) ** 2)
+
+with open("prediction_market_log.json", "w") as f:
+    json.dump(all_runs, f, indent=2)
 
 print(f"Ran {N} sims. Brier score={brier:.4f}")
 
