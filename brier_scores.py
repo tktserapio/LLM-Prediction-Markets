@@ -13,10 +13,6 @@ from azure.core.credentials import AzureKeyCredential
 
 load_dotenv()
 
-# -------------------------
-# 2) OPENAI HELPER
-# -------------------------
-
 def chat_completion(system_text, user_text):
     """
     Replace this with your actual GPT-4 or Azure call as needed.
@@ -56,13 +52,12 @@ def chat_completion(system_text, user_text):
 
     return response.choices[0].message.content
 
-# -------------------------
-# 3) SUBAGENT ESTIMATION FUNCTIONS
-# -------------------------
-# We define multiple versions of weather/traffic bots, plus new bots, each
-# returning a float in [0,1].
+ROUTES        = ["A", "B", "C"]
+liquidity     = 1/8
+num_rounds    = 10        # feel free to raise back to 10
+ROUTE_MULT    = {"A":1.00, "B":0.85, "C":1.10}   # used later
 
-def weatherbot_estimate(bot_name, true_is_rainy):
+def weatherbot_estimate(bot_name, route, true_is_rainy):
     """
     This version can have varied accuracy depending on the bot_name.
     For example, WeatherBot1 might be more accurate than WeatherBot2.
@@ -87,15 +82,15 @@ def weatherbot_estimate(bot_name, true_is_rainy):
     else:
         weather_context = "clear" if sees_rainy_correctly else "rainy"
 
-    system_text = """
+    system_text = f"""
     You are WeatherBot. 
     You are part of a coordinated team of specialized AI assistants (subagents). 
-    Your role is to contribute a reliable numeric probability between 0.0 and 1.0 for whether taking Route A to deliver a package will arrive on time.
+    Your role is to contribute a reliable numeric probability between 0.0 and 1.0 for whether taking Route {route} to deliver a package will arrive on time.
     Your only basis is partial knowledge about the weather, which is described below.
     """
     user_text = f"""
     You are {bot_name}. The weather you observe is: '{weather_context}'.
-    Estimate the probability of success of taking Route A.
+    Estimate the probability of success of taking Route {route}.
     Return only a float between 0.0 and 1.0.
     """
 
@@ -106,7 +101,7 @@ def weatherbot_estimate(bot_name, true_is_rainy):
         print(f"Error parsing response: {text}")
         return 0.5
 
-def trafficbot_estimate(bot_name, true_is_heavy_traffic):
+def trafficbot_estimate(bot_name, route, true_is_heavy_traffic):
     """
     Similarly, multiple TrafficBots with different reliability.
     """
@@ -123,14 +118,14 @@ def trafficbot_estimate(bot_name, true_is_heavy_traffic):
     else:
         traffic_context = "light traffic" if sees_traffic_correctly else "heavy traffic"
 
-    system_text = """
+    system_text = f"""
     You are TrafficBot. 
     You are part of a coordinated team of specialized AI assistants (subagents). 
-    Your role is to contribute a reliable numeric probability between 0.0 and 1.0 for whether taking Route A to deliver a package will arrive on time.
+    Your role is to contribute a reliable numeric probability between 0.0 and 1.0 for whether taking Route {route} to deliver a package will arrive on time.
     Your only basis is partial knowledge about the traffic, which is described below.
     """
     user_text = f"""You see: '{traffic_context}'. 
-    Estimate the probability of success of taking Route A.
+    Estimate the probability of success of taking Route {route}.
     Return only a float between 0.0 and 1.0."""
 
     text = chat_completion(system_text, user_text)
@@ -139,14 +134,14 @@ def trafficbot_estimate(bot_name, true_is_heavy_traffic):
     except ValueError:
         return 0.5
 
-def maintenancebot_estimate():
+def maintenancebot_estimate(route):
     # same as before, random chance of seeing "potholes" or "smooth"
     route_condition = np.random.choice(["potholes", "smooth"])
-    system_text = """You are a MaintenanceBot. You see partial info about the road condition. 
+    system_text = f"""You are a MaintenanceBot. You see partial info about the road condition. 
     Output a probability in [0,1] for successful on-time delivery.
     """
     user_text = f"""The route condition is: {route_condition}. 
-    Estimate the probability of success of taking Route A.
+    Estimate the probability of success of taking Route {route}.
     Return only a float between 0.0 and 1.0."""
     text = chat_completion(system_text, user_text)
     try:
@@ -154,7 +149,7 @@ def maintenancebot_estimate():
     except ValueError:
         return 0.5
 
-def local_events_bot_estimate(bot_name):
+def local_events_bot_estimate(bot_name, route):
     """
     Another new type of subagent that sees local events (like protests/festivals).
     We'll randomize the 'observed' event, which may or may not match reality.
@@ -163,14 +158,14 @@ def local_events_bot_estimate(bot_name):
     possible_events = ["protest near route", "big festival downtown", "normal day", "sports event nearby"]
     observed_event = np.random.choice(possible_events)
     
-    system_text = """
+    system_text = f"""
     You are LocalEventsBot.
     You are part of a coordinated team of specialized AI assistants (subagents). 
-    Your role is to contribute a reliable numeric probability between 0.0 and 1.0 for whether taking Route A to deliver a package will arrive on time.
+    Your role is to contribute a reliable numeric probability between 0.0 and 1.0 for whether taking Route {route} to deliver a package will arrive on time.
     Your only basis is partial knowledge about local events, which is described below.
     """
     user_text = f"""You see: {observed_event}. 
-    Estimate the probability of success of taking Route A.
+    Estimate the probability of success of taking Route {route}.
     Return only a float between 0.0 and 1.0."""
 
     text = chat_completion(system_text, user_text)
@@ -179,20 +174,20 @@ def local_events_bot_estimate(bot_name):
     except ValueError:
         return 0.5
 
-def road_condition_bot_estimate(bot_name):
+def road_condition_bot_estimate(bot_name, route):
     """
     A more fine-grained version of MaintenanceBot.
     """
     possible_conditions = ["severe potholes", "minor cracks", "freshly paved", "wet and slippery"]
     observed_condition = np.random.choice(possible_conditions)
-    system_text = """
+    system_text = f"""
     You are RoadConditionBot.
     You are part of a coordinated team of specialized AI assistants (subagents). 
-    Your role is to contribute a reliable numeric probability between 0.0 and 1.0 for whether taking Route A to deliver a package will arrive on time.
+    Your role is to contribute a reliable numeric probability between 0.0 and 1.0 for whether taking Route {route} to deliver a package will arrive on time.
     Your only basis is partial knowledge about the road conditions, which is described below.
     """
     user_text = f"""Observed condition: {observed_condition}. 
-    Estimate the probability of success of taking Route A.
+    Estimate the probability of success of taking Route {route}.
     Return only a float between 0.0 and 1.0."""
     text = chat_completion(system_text, user_text)
     try:
@@ -200,13 +195,10 @@ def road_condition_bot_estimate(bot_name):
     except ValueError:
         return 0.5
 
-# -------------------------
-# 5) DECIDE_TRADE
-# -------------------------
-def decide_trade(subagent_name, p_est, market_price, capital):
+
+def decide_trade(subagent_name, route, p_est, market_price_scalar, capital):
     system_prompt = (
-        "You are a simulated agent in an internal prediction market about whether Route A will deliver on time. "
-        "You have a personal probability estimate, the current market price, and your available capital. "
+        f"You are a simulated agent in an internal prediction market about whether taking Route {route} will deliver on time."
         "You can buy shares (positive number) if you think the event is underpriced, "
         "or short shares (negative number) if you think it's overpriced. A share pays out 1 if the event occurs, 0 otherwise."
         "Your TOP PRIORITY is to maximize your profit in the long run."
@@ -215,7 +207,7 @@ def decide_trade(subagent_name, p_est, market_price, capital):
     user_text = (
         f"Agent: {subagent_name}\n"
         f"Your probability estimate: {p_est:.3f}\n"
-        f"Market price: {market_price:.3f}\n"
+        f"Market price: {market_price_scalar:.3f}\n"
         f"Capital: {capital:.2f}\n"
         "Decide how many shares to buy (positive) or short (negative). Provide a brief justification that should be within 100 words. End with a single float number."
     )
@@ -242,125 +234,99 @@ def decide_trade(subagent_name, p_est, market_price, capital):
 
 def simulate_one():
     # 1) TRUE WORLD STATE
-    is_rainy         = np.random.rand() < 0.30
-    is_heavy_traffic = np.random.rand() < 0.40
-    true_prob = (0.30 if is_rainy and is_heavy_traffic else
-                 0.60 if is_rainy else
-                 0.50 if is_heavy_traffic else
-                 0.95)
-    # extra factors
-    if np.random.rand() < 0.05: true_prob *= 0.80
-    if np.random.rand() < 0.10: true_prob *= 0.85
-    true_success_prob = min(max(true_prob, 0.0), 1.0)
+    is_rainy, is_heavy = np.random.rand()<0.30, np.random.rand()<0.40
+    base_prob = 0.30 if (is_rainy and is_heavy) else 0.60 if is_rainy else 0.50 if is_heavy else 0.95
+    if np.random.rand()<0.05: base_prob *= 0.80
+    if np.random.rand()<0.10: base_prob *= 0.85
+    true_success_prob = {r: min(max(base_prob*ROUTE_MULT[r],0),1) for r in ROUTES}
 
     # 2) Build subagents
     subagent_specs = [
-        ("WeatherBot1",     lambda: weatherbot_estimate("WeatherBot1",     is_rainy)),
-        ("WeatherBot2",     lambda: weatherbot_estimate("WeatherBot2",     is_rainy)),
-        ("TrafficBot1",     lambda: trafficbot_estimate("TrafficBot1",     is_heavy_traffic)),
-        ("TrafficBot2",     lambda: trafficbot_estimate("TrafficBot2",     is_heavy_traffic)),
-        ("MaintBot",        maintenancebot_estimate),
-        ("LocalEventsBot1", lambda: local_events_bot_estimate("LocalEventsBot1")),
-        ("RoadConditionBot1", lambda: road_condition_bot_estimate("RoadConditionBot1")),
+        ("WeatherBot1",     lambda r: weatherbot_estimate("WeatherBot1", r, is_rainy)),
+        ("WeatherBot2",     lambda r: weatherbot_estimate("WeatherBot2", r, is_rainy)),
+        ("TrafficBot1",     lambda r: trafficbot_estimate("TrafficBot1", r, is_heavy)),
+        ("TrafficBot2",     lambda r: trafficbot_estimate("TrafficBot2", r, is_heavy)),
+        ("MaintBot",        lambda r: maintenancebot_estimate(r)),
+        ("LocalEventsBot1", lambda r: local_events_bot_estimate("LocalEventsBot1", r)),
+        ("RoadConditionBot1", lambda r: road_condition_bot_estimate("RoadConditionBot1", r)),
     ]
-    subagent_estimates   = {name: fn() for name, fn in subagent_specs}
-    subagent_capital     = {name:100.0 for name in subagent_estimates}
-    subagent_positions   = {name:  0.0 for name in subagent_estimates}
-
-    market_price = 0.50
-    liquidity    = 1/8
-    num_rounds   = 10
+    subagent_estimates = {r:{} for r in ROUTES}
+    for agent, fn in subagent_specs:
+        for r in ROUTES:
+            subagent_estimates[r][agent] = fn(r)
+    subagent_capital   = {agent:100.0 for agent,_ in subagent_specs}
+    subagent_positions = {r:{agent:0.0 for agent,_ in subagent_specs} for r in ROUTES}
+    market_price       = {r:0.5 for r in ROUTES}
 
     trade_history = []
 
     # 3) Trading
     for rnd in range(1, num_rounds+1):
-        for name, p_est in subagent_estimates.items():
-            capital    = subagent_capital[name]
-            price_before = market_price
-            trade_size, full_response = decide_trade(name, p_est, market_price, capital)
+        for r in ROUTES:
+            for agent in subagent_estimates[r]:
+                p_est = subagent_estimates[r][agent]
+                cap   = subagent_capital[agent]
+                p0    = market_price[r]
 
-            entry = {
-                "true_success_prob": true_success_prob,
-                "round": rnd,
-                "agent": name,
-                "belief": p_est,
-                "full_response": full_response,
-                "capital_before": capital,
-                "price_before": price_before,
-                "trade_size": trade_size
-            }
+                trade, full_resp = decide_trade(agent, r, p_est, p0, cap)
 
-            if trade_size > 0:
-                cost = trade_size * market_price
-                if cost > capital:
-                    trade_size = float(int(capital // market_price))
-                    cost = trade_size * market_price
-                subagent_capital[name]   -= cost
-                subagent_positions[name] += trade_size
-                diff = abs(p_est - market_price)
-                market_price += diff * liquidity * (trade_size / 100.0)
+                entry = dict(round=rnd, route=r, agent=agent, belief=p_est,
+                             price_before=p0, trade_size=trade,
+                             capital_before=cap, true_success_prob=true_success_prob[r],
+                             full_response=full_resp)
 
-            elif trade_size < 0:
-                shares_to_short = abs(trade_size)
-                if shares_to_short > subagent_capital[name]:
-                    shares_to_short = int(subagent_capital[name])
-                    trade_size = -float(shares_to_short)
-                credit = shares_to_short * market_price
-                subagent_capital[name] += credit
-                if subagent_capital[name] < 0:
-                    subagent_capital[name] -= credit
-                    shares_to_short = 0
-                    trade_size      = 0
-                if shares_to_short > 0:
-                    subagent_positions[name] -= shares_to_short
-                    diff = abs(p_est - market_price)
-                    market_price -= diff * liquidity * (shares_to_short / 100.0)
+                if trade>0:
+                    cost = trade*p0
+                    if cost>cap:
+                        trade = int(cap//p0); cost = trade*p0
+                    subagent_capital[agent] -= cost
+                    subagent_positions[r][agent] += trade
+                    market_price[r] += abs(p_est-p0)*liquidity*(trade/100)
+                elif trade<0:
+                    qty = abs(trade)
+                    if qty>cap:
+                        qty=int(cap); trade=-qty
+                    credit = qty*p0
+                    subagent_capital[agent] += credit
+                    subagent_positions[r][agent] -= qty
+                    market_price[r] -= abs(p_est-p0)*liquidity*(qty/100)
 
-            market_price = max(0.0, min(1.0, market_price))
-
-            entry["price_after"]   = market_price
-            entry["capital_after"] = subagent_capital[name]
-            entry["position"]      = subagent_positions[name]
-
-            trade_history.append(entry)
+                market_price[r] = max(0.0,min(1.0,market_price[r]))
+                entry.update(price_after=market_price[r],
+                             capital_after=subagent_capital[agent],
+                             position=subagent_positions[r][agent])
+                trade_history.append(entry)
 
     # 4) Outcome & Settlement
-    did_succeed = (np.random.rand() < true_success_prob)
-    for name, pos in subagent_positions.items():
-        if pos > 0 and did_succeed:
-            subagent_capital[name] += pos
-        elif pos < 0 and did_succeed:
-            subagent_capital[name] -= abs(pos)
+    did_succeed = {r:(random.random()<true_success_prob[r]) for r in ROUTES}
+    for r in ROUTES:
+        for agent,q in subagent_positions[r].items():
+            if q>0 and did_succeed[r]:
+                subagent_capital[agent]+=q
+            elif q<0 and did_succeed[r]:
+                subagent_capital[agent]-=abs(q)
 
-    return trade_history, market_price, did_succeed
+    return dict(market_price=market_price, did_succeed=did_succeed), trade_history
 
 # -------------------------
 # 7) MULTI-RUN & BRIER SCORE
 # -------------------------
 
-N     = 20
-preds = []
-obs   = []
-all_runs = []
+N, preds, obs, all_runs = 20, [], [], []
+for run in range(1,N+1):
+    summary, hist = simulate_one()
+    for e in hist:
+        e["run"]=run; e["success"]=summary["did_succeed"][e["route"]]
+    all_runs.extend(hist)
+    for route,price in summary["market_price"].items():
+        preds.append(price)
+        obs.append(1 if summary["did_succeed"][route] else 0)
 
-for run in range(1, N+1):
-    history, p, success = simulate_one()
-    for entry in history:
-        entry["run"]      = run
-        entry["success"]  = success
-    all_runs.extend(history)
-    preds.append(p)
-    obs.append(1 if success else 0)
+brier = np.mean((np.array(preds)-np.array(obs))**2)
 
-preds = np.array(preds)
-obs   = np.array(obs)
-brier = np.mean((preds - obs) ** 2)
+with open("prediction_market_log.json","w") as f:
+    json.dump(all_runs,f,indent=2)
+np.savez("brier_data.npz",preds=np.array(preds),obs=np.array(obs))
 
-with open("prediction_market_log.json", "w") as f:
-    json.dump(all_runs, f, indent=2)
-
-print(f"Ran {N} sims. Brier score={brier:.4f}")
-
-# Optionally save for further analysis
-np.savez("brier_data.npz", preds=preds, obs=obs)
+print(f"Ran {N} sims across {len(ROUTES)} routes → {len(preds)} forecasts.")
+print(f"Brier score = {brier:.4f}")
